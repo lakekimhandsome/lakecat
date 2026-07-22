@@ -17,9 +17,21 @@ class Renderer:
         self._stdscr = stdscr
         self._debug_hud = DebugHud()
 
-    def render(self, world: World, stats: DebugStats | None = None) -> None:
-        camera = world.camera
+    def render(
+        self,
+        world: World,
+        stats: DebugStats | None = None,
+        *,
+        overlay: list[str] | tuple[str, ...] | None = None,
+    ) -> None:
         self._stdscr.clear()
+
+        if overlay is not None:
+            self._draw_screen_overlay(overlay)
+            self._stdscr.refresh()
+            return
+
+        camera = world.camera
 
         for obj in world.map.objects:
             sx, sy = camera.world_to_screen(obj.world_x, obj.world_y)
@@ -31,6 +43,16 @@ class Renderer:
 
         self._draw_debug_hud(world, stats or DebugStats())
         self._stdscr.refresh()
+
+    def _draw_screen_overlay(self, lines: list[str] | tuple[str, ...]) -> None:
+        """Full-screen art. Screen coordinates only — camera never involved."""
+        height, width = self._stdscr.getmaxyx()
+        for row, line in enumerate(lines):
+            if row >= height:
+                break
+            if width <= 0:
+                break
+            self._put(row, 0, line[: width - 1] if width > 1 else "")
 
     def _draw_debug_hud(self, world: World, stats: DebugStats) -> None:
         """Screen-fixed overlay. Never uses the camera."""

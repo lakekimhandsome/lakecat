@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+from lakecat.assets.art import load_ascii_art
 from lakecat.engine.debug_hud import DebugStats
 from lakecat.engine.input import Action, InputHandler
 from lakecat.engine.renderer import Renderer
@@ -37,6 +38,8 @@ class Game:
         self._world: World = create_demo_world()
         self._renderer = Renderer(stdscr)
         self._last_frame_time = time.perf_counter()
+        self._show_ascii_art = False
+        self._ascii_art = load_ascii_art()
 
     def run(self) -> None:
         while True:
@@ -49,12 +52,24 @@ class Game:
             if Action.QUIT in actions:
                 break
 
-            self._apply_input(actions)
-            self._world.update()
+            if Action.CONFIRM in actions:
+                self._show_ascii_art = not self._show_ascii_art
+
+            if not self._show_ascii_art:
+                self._apply_input(actions)
+                self._world.update()
 
             height, width = self._stdscr.getmaxyx()
             self._world.sync_camera(width, height)
-            self._renderer.render(self._world, DebugStats(fps=fps))
+
+            if self._show_ascii_art:
+                self._renderer.render(
+                    self._world,
+                    DebugStats(fps=fps),
+                    overlay=self._ascii_art,
+                )
+            else:
+                self._renderer.render(self._world, DebugStats(fps=fps))
             time.sleep(FRAME_TIME)
 
     def _apply_input(self, actions: list[Action]) -> None:

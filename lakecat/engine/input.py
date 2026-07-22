@@ -12,6 +12,7 @@ class Action(Enum):
     MOVE_DOWN = auto()
     MOVE_LEFT = auto()
     MOVE_RIGHT = auto()
+    CONFIRM = auto()
     QUIT = auto()
 
 
@@ -35,6 +36,8 @@ class InputHandler:
                 actions.append(Action.MOVE_LEFT)
             elif key in (curses.KEY_RIGHT, ord("d"), ord("D")):
                 actions.append(Action.MOVE_RIGHT)
+            elif key in (curses.KEY_ENTER, 10, 13):
+                actions.append(Action.CONFIRM)
             elif key == ord("q"):
                 actions.append(Action.QUIT)
 
