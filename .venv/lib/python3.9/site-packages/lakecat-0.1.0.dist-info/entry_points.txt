@@ -1,0 +1,2 @@
+[console_scripts]
+lakecat = lakecat.main:run
