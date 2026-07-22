@@ -1,31 +1,30 @@
 import curses
 import time
 
-DOOR_LEFT = [
+DOOR = [
     " ______",
-    "/      /",
-    "/      /",
-    "/  .   /",
-    "/______/",
+    "|      |",
+    "| _    |",
+    "|      |",
+    "|______|",
 ]
-DOOR_RIGHT = [
-    "______ ",
-    "\\      \\",
-    " \\      \\",
-    "  \\   .  \\",
-    "   \\______\\",
-]
-DOOR_WIDTH = max(len(line) for line in DOOR_LEFT)
+DOOR_WIDTH = max(len(line) for line in DOOR)
+DOOR_HEIGHT = len(DOOR)
 
 
 def run():
     curses.wrapper(main)
 
 
-def draw_door(stdscr, door, door_x, door_y, height):
-    for i, line in enumerate(door):
-        if door_y + i < height:
-            stdscr.addstr(door_y + i, door_x, line)
+def draw_door(stdscr, door_x, door_y, height, width):
+    for i, line in enumerate(DOOR):
+        row = door_y + i
+        if row >= height:
+            break
+        max_len = width - door_x
+        if max_len <= 0:
+            break
+        stdscr.addstr(row, door_x, line[:max_len])
 
 
 def main(stdscr):
@@ -56,23 +55,22 @@ def main(stdscr):
         y = max(1, min(y, height - 1))
         x = max(0, min(x, width - 3))
 
-        door_y = max(1, (height - len(DOOR_LEFT)) // 2)
-        door_bottom = door_y + len(DOOR_LEFT) - 1
-
-        door_x = max(0, width - DOOR_WIDTH - 1)
+        door_y = max(1, (height - DOOR_HEIGHT) // 2)
+        door_bottom = door_y + DOOR_HEIGHT - 1
+        door_x = max(0, width - DOOR_WIDTH)
 
         if scene == "home":
             touching_door = door_y <= y <= door_bottom and x < DOOR_WIDTH
             if touching_door:
                 scene = "town"
-                x = width // 2
-                y = height // 2
+                x = max(0, door_x - 2)
+                y = door_y + DOOR_HEIGHT // 2
         elif scene == "town":
             touching_door = door_y <= y <= door_bottom and x >= door_x
             if touching_door:
                 scene = "home"
-                x = width // 2
-                y = height // 2
+                x = DOOR_WIDTH
+                y = door_y + DOOR_HEIGHT // 2
 
         stdscr.clear()
 
@@ -81,9 +79,9 @@ def main(stdscr):
         stdscr.addstr(0, title_x, title)
 
         if scene == "home":
-            draw_door(stdscr, DOOR_LEFT, 0, door_y, height)
+            draw_door(stdscr, 0, door_y, height, width)
         else:
-            draw_door(stdscr, DOOR_RIGHT, door_x, door_y, height)
+            draw_door(stdscr, door_x, door_y, height, width)
 
         stdscr.addstr(y, x, "🐈")
         stdscr.refresh()
