@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from lakecat.assets.sprites import PLAYER_GLYPH
+from lakecat.items.inventory import Inventory
 from lakecat.world.objects import Position
 
 
@@ -16,6 +17,7 @@ class Player:
     height: int = 1
     move_speed_x: int = 2
     move_speed_y: int = 1
+    inventory: Inventory = field(default_factory=Inventory)
 
     def proposed_position(self, dx: int, dy: int) -> Position:
         """Where a move command would place the player (world space)."""

@@ -28,15 +28,7 @@ def can_move_to(
     for obj in game_map.objects:
         if not obj.solid:
             continue
-        if rects_overlap(
-            x,
-            y,
-            width,
-            height,
-            obj.world_x,
-            obj.world_y,
-            obj.width,
-            obj.height,
-        ):
+        sx, sy, sw, sh = obj.solid_bounds()
+        if rects_overlap(x, y, width, height, sx, sy, sw, sh):
             return False
     return True

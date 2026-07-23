@@ -14,6 +14,8 @@ class Action(Enum):
     MOVE_RIGHT = auto()
     CONFIRM = auto()
     QUIT = auto()
+    TOGGLE_INVENTORY = auto()
+    CANCEL = auto()
 
 
 class InputHandler:
@@ -38,6 +40,10 @@ class InputHandler:
                 actions.append(Action.MOVE_RIGHT)
             elif key in (curses.KEY_ENTER, 10, 13):
                 actions.append(Action.CONFIRM)
+            elif key in (ord("i"), ord("I")):
+                actions.append(Action.TOGGLE_INVENTORY)
+            elif key == 27:
+                actions.append(Action.CANCEL)
             elif key == ord("q"):
                 actions.append(Action.QUIT)
 
