@@ -47,6 +47,21 @@ class World:
         self.camera.resize(screen_width, screen_height)
         self.camera.center_on(self.player.position)
 
+    def chop_tree_at(self, world_x: int, world_y: int) -> bool:
+        """Remove the frontmost tree covering this cell and grant 1 wood."""
+        candidates = [
+            (obj.sort_y, index, obj)
+            for index, obj in enumerate(self.map.objects)
+            if obj.name == "tree" and obj.covers_cell(world_x, world_y)
+        ]
+        if not candidates:
+            return False
+
+        _, _, tree = max(candidates, key=lambda item: (item[0], item[1]))
+        self.map.objects.remove(tree)
+        self.player.inventory.add(WOOD, 1)
+        return True
+
 
 def _sprite_size(sprite: list[str]) -> tuple[int, int]:
     height = len(sprite)

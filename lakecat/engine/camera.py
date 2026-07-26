@@ -24,3 +24,6 @@ class Camera:
 
     def world_to_screen(self, world_x: int, world_y: int) -> tuple[int, int]:
         return world_x - self.x, world_y - self.y
+
+    def screen_to_world(self, screen_x: int, screen_y: int) -> tuple[int, int]:
+        return screen_x + self.x, screen_y + self.y

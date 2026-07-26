@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from lakecat.assets.art import load_ascii_art
 from lakecat.engine.debug_hud import DebugStats
-from lakecat.engine.input import Action, InputHandler
+from lakecat.engine.input import Action, Click, InputFrame, InputHandler
 from lakecat.engine.renderer import Renderer
 from lakecat.ui.inventory_view import InventoryView
 from lakecat.world.world import World, create_demo_world
@@ -35,6 +35,8 @@ class Game:
         stdscr.nodelay(True)
         stdscr.keypad(True)
         curses.set_escdelay(25)
+        curses.mousemask(curses.BUTTON1_PRESSED | curses.BUTTON1_CLICKED)
+        curses.mouseinterval(0)
 
         self._input = InputHandler()
         self._world: World = create_demo_world()
@@ -53,17 +55,21 @@ class Game:
             self._last_frame_time = frame_start
             fps = (1.0 / dt) if dt > 0 else 0.0
 
-            actions = self._input.poll(self._stdscr)
-            if Action.QUIT in actions:
+            frame = self._input.poll(self._stdscr)
+            if Action.QUIT in frame.actions:
                 break
 
-            self._handle_actions(actions)
+            self._handle_input(frame)
 
             if not self._show_ascii_art and not self._inventory_open:
                 self._world.update()
 
             height, width = self._stdscr.getmaxyx()
             self._world.sync_camera(width, height)
+
+            # Clicks need a sized/centered camera for screen → world conversion.
+            if not self._show_ascii_art and not self._inventory_open:
+                self._apply_clicks(frame.clicks)
 
             if self._show_ascii_art:
                 self._renderer.render(
@@ -80,20 +86,20 @@ class Game:
                     )
             time.sleep(FRAME_TIME)
 
-    def _handle_actions(self, actions: list[Action]) -> None:
+    def _handle_input(self, frame: InputFrame) -> None:
         if self._inventory_open:
-            self._handle_inventory_actions(actions)
+            self._handle_inventory_actions(frame.actions)
             return
 
-        if Action.TOGGLE_INVENTORY in actions and not self._show_ascii_art:
+        if Action.TOGGLE_INVENTORY in frame.actions and not self._show_ascii_art:
             self._open_inventory()
             return
 
-        if Action.CONFIRM in actions:
+        if Action.CONFIRM in frame.actions:
             self._show_ascii_art = not self._show_ascii_art
 
         if not self._show_ascii_art:
-            self._apply_movement(actions)
+            self._apply_movement(frame.actions)
 
     def _handle_inventory_actions(self, actions: list[Action]) -> None:
         if Action.CANCEL in actions or Action.TOGGLE_INVENTORY in actions:
@@ -124,3 +130,11 @@ class Game:
             delta = _MOVE_DELTA.get(action)
             if delta is not None:
                 self._world.try_move_player(*delta)
+
+    def _apply_clicks(self, clicks: list[Click]) -> None:
+        for click in clicks:
+            world_x, world_y = self._world.camera.screen_to_world(
+                click.screen_x,
+                click.screen_y,
+            )
+            self._world.chop_tree_at(world_x, world_y)
